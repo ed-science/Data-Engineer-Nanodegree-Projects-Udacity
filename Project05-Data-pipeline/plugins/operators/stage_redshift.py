@@ -55,18 +55,18 @@ class StageToRedshiftOperator(BaseOperator):
         redshift = PostgresHook(postgres_conn_id=self.redshift_conn_id)
 
         self.log.info("Clearing data from destination Redshift table")
-        redshift.run("DELETE FROM {}".format(self.table))
+        redshift.run(f"DELETE FROM {self.table}")
 
         self.log.info("Copying data from S3 to Redshift")
 
-        s3_path = "s3://{}".format(self.s3_bucket)
+        s3_path = f"s3://{self.s3_bucket}"
         if self.execution_date:
             # Backfill a specific date
             year = self.execution_date.strftime("%Y")
             month = self.execution_date.strftime("%m")
             day = self.execution_date.strftime("%d")
             s3_path = '/'.join([s3_path, str(year), str(month), str(day)])
-        s3_path = s3_path + '/' + self.s3_key
+        s3_path = f'{s3_path}/{self.s3_key}'
 
         additional=""
         if self.file_format == 'CSV':

@@ -35,25 +35,25 @@ class TweetHandler:
         :param tweet: Tweet data as dict
         :return: Filtered tweet data
         """
-        filtered_tweet = {"user_id": tweet.user.id_str,
-                          "name": tweet.user.name,
-                          "nickname": tweet.user.screen_name,
-                          "description": tweet.user.description,
-                          "user_location": tweet.user.location,
-                          "followers_count": tweet.user.followers_count,
-                          "tweets_count": tweet.user.statuses_count,
-                          "user_date": tweet.user.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-                          "verified": tweet.user.verified,
-                          "tweet_id": tweet.id_str,
-                          "text": tweet.full_text,
-                          "favs": tweet.favorite_count,
-                          "retweets": tweet.retweet_count,
-                          "tweet_date": tweet.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-                          "tweet_location": tweet.place.full_name if tweet.place else None,
-                          "source": tweet.source,
-                          "sentiment": self.detect_sentiment(tweet.full_text, tweet.lang)}
-
-        return filtered_tweet
+        return {
+            "user_id": tweet.user.id_str,
+            "name": tweet.user.name,
+            "nickname": tweet.user.screen_name,
+            "description": tweet.user.description,
+            "user_location": tweet.user.location,
+            "followers_count": tweet.user.followers_count,
+            "tweets_count": tweet.user.statuses_count,
+            "user_date": tweet.user.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+            "verified": tweet.user.verified,
+            "tweet_id": tweet.id_str,
+            "text": tweet.full_text,
+            "favs": tweet.favorite_count,
+            "retweets": tweet.retweet_count,
+            "tweet_date": tweet.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+            "tweet_location": tweet.place.full_name if tweet.place else None,
+            "source": tweet.source,
+            "sentiment": self.detect_sentiment(tweet.full_text, tweet.lang),
+        }
 
     def detect_sentiment(self, text: str, lang: str, full_result: bool = False):
         """
@@ -65,10 +65,7 @@ class TweetHandler:
         """
         sentiment = self.comprehend_client.detect_sentiment(Text=text, LanguageCode=lang)
 
-        if full_result:
-            return sentiment
-        else:
-            return sentiment["Sentiment"]
+        return sentiment if full_result else sentiment["Sentiment"]
 
     @staticmethod
     def handle_rate_limit(cursor: tweepy.Cursor):

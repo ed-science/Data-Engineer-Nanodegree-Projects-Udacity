@@ -18,11 +18,7 @@ def process_song_file(cur, filepath):
 
     for index,row in df.iterrows():
         #convert the Dataframe row into a dictonary
-        values = {}
-        for column in df.columns:
-            values[column] = row[column]
-
-
+        values = {column: row[column] for column in df.columns}
         # insert artist record
         artist_data = [values['artist_id'], 
                         values['artist_name'], 
@@ -59,11 +55,21 @@ def process_log_file(cur, filepath):
 
     # convert timestamp column to datetime
     t = pd.to_datetime(df['ts'], unit='ms') 
-    
+
     # insert time data records
-    time_data = []
-    for line in t:
-        time_data.append([line, line.hour, line.day, line.week, line.month, line.year, line.day_name()])
+    time_data = [
+        [
+            line,
+            line.hour,
+            line.day,
+            line.week,
+            line.month,
+            line.year,
+            line.day_name(),
+        ]
+        for line in t
+    ]
+
     column_labels = ('start_time', 'hour', 'day', 'week', 'month', 'year', 'weekday')
     time_df = pd.DataFrame.from_records(time_data, columns=column_labels)
 
@@ -82,13 +88,7 @@ def process_log_file(cur, filepath):
         
         # get songid and artistid from song and artist tables
         cur.execute(song_select, (row.song, row.artist, row.length))
-        results = cur.fetchone()
-        
-        if results:
-            songid, artistid = results
-        else:
-            songid, artistid = None, None
-
+        songid, artistid = results if (results := cur.fetchone()) else (None, None)
         # insert songplay record
         songplay_data = (pd.to_datetime(row.ts, unit='ms'), int(row.userId), row.level, songid, artistid, row.sessionId, row.location, row.userAgent)
         cur.execute(songplay_table_insert, songplay_data)
@@ -110,19 +110,17 @@ def process_data(cur, conn, filepath, func):
     all_files = []
     for root, dirs, files in os.walk(filepath):
         files = glob.glob(os.path.join(root,'*.json'))
-        for f in files :
-            all_files.append(os.path.abspath(f))
-
+        all_files.extend(os.path.abspath(f) for f in files)
     # get total number of files found
     num_files = len(all_files)
-    print('{} files found in {}'.format(num_files, filepath))
+    print(f'{num_files} files found in {filepath}')
 
     # iterate over files and process
     for i, datafile in enumerate(all_files, 1):
         func(cur, datafile)
         conn.commit()
-        print('{}/{} files processed.'.format(i, num_files))
-    
+        print(f'{i}/{num_files} files processed.')
+
     return all_files
 
 
