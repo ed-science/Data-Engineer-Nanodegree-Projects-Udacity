@@ -21,10 +21,8 @@ class CreateTablesOperator(BaseOperator):
 
         self.log.info("Creating Redshift tables ")
 
-        fd = open(CreateTablesOperator.sql_statement_file, 'r')
-        sql_file = fd.read()
-        fd.close()
-
+        with open(CreateTablesOperator.sql_statement_file, 'r') as fd:
+            sql_file = fd.read()
         sql_commands = sql_file.split(';')
 
         for command in sql_commands:
